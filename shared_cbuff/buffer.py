@@ -2,6 +2,8 @@ import atexit
 import typing
 from multiprocessing import shared_memory
 
+from shared_cbuff import errors
+
 __all__: typing.List[str] = ["SharedCircularBuffer"]
 
 
@@ -20,8 +22,16 @@ class SharedCircularBuffer:
         item_size (:obj:`int`): The number of bytes each item in the buffer should take up. Defaults to ``1``.
         length (:obj:`int`): The length of the buffer. Defaults to ``2``.
 
+    .. warning::
+        All instances that connect to the same shared memory must have the ``name``, ``item_size`` and ``length``
+        parameters passed in if they differ from default otherwise reading from the shared memory **will not**
+        work correctly.
+
     """
-    def __init__(self, name: str, *, create: bool = False, item_size: int = 1, length: int = 2):
+
+    def __init__(
+        self, name: str, *, create: bool = False, item_size: int = 1, length: int = 2
+    ):
         if length > 256:
             raise TypeError("Buffer length must be at maximum 256")
 
@@ -32,7 +42,9 @@ class SharedCircularBuffer:
         self.writeable = create
 
         if create:
-            self._memory = shared_memory.SharedMemory(name=name, create=True, size=self._internal_length)
+            self._memory = shared_memory.SharedMemory(
+                name=name, create=True, size=self._internal_length
+            )
         else:
             self._memory = shared_memory.SharedMemory(name=name, create=False)
 
@@ -65,10 +77,10 @@ class SharedCircularBuffer:
             ``None``
 
         Raises:
-            :obj:`TypeError`: The buffer cannot be written to by this instance.
+            :obj:`~.errors.WriteOperationsForbidden`: The buffer cannot be written to by this instance.
         """
         if not self.writeable:
-            raise TypeError("Buffer is not writeable")
+            raise errors.WriteOperationsForbidden("Buffer is not writeable")
 
         self._next_write_pointer()
         self._memory.buf[self._write_pointer] = item
@@ -81,10 +93,10 @@ class SharedCircularBuffer:
             Optional[ :obj:`int` ]: Item removed from the buffer, or ``None`` if there is nothing to read.
 
         Raises:
-            :obj:`TypeError`: The buffer cannot be read from by this instance.
+            :obj:`~.errors.ReadOperationsForbidden`: The buffer cannot be read from by this instance.
         """
         if self.writeable:
-            raise TypeError("Buffer is not readable")
+            raise errors.ReadOperationsForbidden("Buffer is not readable")
 
         if (read_addr := self._next_read_pointer()) is not None:
             return self._memory.buf[read_addr]
@@ -98,10 +110,10 @@ class SharedCircularBuffer:
             Sequence[ :obj:`int` ]: Items removed from the buffer.
 
         Raises:
-            :obj:`TypeError`: The buffer cannot be read from by this instance.
+            :obj:`~.errors.ReadOperationsForbidden`: The buffer cannot be read from by this instance.
         """
         if self.writeable:
-            raise TypeError("Buffer is not readable")
+            raise errors.ReadOperationsForbidden("Buffer is not readable")
 
         items = []
         for _ in range(n):
