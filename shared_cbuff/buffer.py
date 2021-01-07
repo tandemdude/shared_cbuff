@@ -37,8 +37,8 @@ class SharedCircularBuffer:
     def __init__(
         self, name: str, *, create: bool = False, item_size: int = 1, length: int = 2
     ):
-        if length > 256:
-            raise TypeError("Buffer length must be at maximum 256")
+        if length < 2:
+            raise ValueError("Buffer length must greater than 1")
 
         self.name = name
         self.item_size = item_size
