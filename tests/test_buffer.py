@@ -96,3 +96,9 @@ def test_read_works_for_write_addresses_longer_than_1_byte(SCB_3):
     for i in range(127):
         scb_a.push(i)
     assert len(scb_b.popmany(127)) == 127
+
+
+def test_error_raised_when_buffer_attempted_to_be_created_but_already_exists(SCB_1):
+    with pytest.raises(errors.BufferAlreadyCreated) as exc_info:
+        _scb = buffer.SharedCircularBuffer("test_buffer_1", create=True)
+    assert exc_info.type is errors.BufferAlreadyCreated

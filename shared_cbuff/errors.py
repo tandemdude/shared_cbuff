@@ -24,6 +24,7 @@ __all__: typing.List[str] = [
     "CBuffException",
     "WriteOperationsForbidden",
     "ReadOperationsForbidden",
+    "BufferAlreadyCreated",
 ]
 
 
@@ -33,13 +34,19 @@ class CBuffException(Exception):
     pass
 
 
-class WriteOperationsForbidden(Exception):
+class WriteOperationsForbidden(CBuffException):
     """Exception raised when a write operation is attempted but is not permitted."""
 
     pass
 
 
-class ReadOperationsForbidden(Exception):
+class ReadOperationsForbidden(CBuffException):
     """Exception raised when a read operation is attempted but is not permitted."""
+
+    pass
+
+
+class BufferAlreadyCreated(CBuffException):
+    """Exception raised when attempting to create multiple buffers with the same name."""
 
     pass

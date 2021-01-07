@@ -71,9 +71,14 @@ class SharedCircularBuffer:
         self._writeable = create
 
         if create:
-            self._memory = shared_memory.SharedMemory(
-                name=name, create=True, size=self._internal_length
-            )
+            try:
+                self._memory = shared_memory.SharedMemory(
+                    name=name, create=True, size=self._internal_length
+                )
+            except FileExistsError as e:
+                raise errors.BufferAlreadyCreated(
+                    "Buffer with that name already exists"
+                ) from e
         else:
             self._memory = shared_memory.SharedMemory(name=name, create=False)
 

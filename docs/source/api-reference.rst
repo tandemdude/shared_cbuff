@@ -13,3 +13,4 @@ Errors
 .. automodule:: shared_cbuff.errors
     :members:
     :member-order: bysource
+    :show-inheritance:
