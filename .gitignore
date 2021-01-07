@@ -37,5 +37,9 @@ bot_test.py
 extension_test.py
 testext/
 
+# Coverage files
+.coverage
+htmlcov/
+
 # Stupid OSX files
 .DS_Store

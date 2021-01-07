@@ -32,21 +32,21 @@ def SCB_3():
 
 
 def test_push_raises_when_write_not_permitted(SCB_1):
-    scb_a, scb_b = SCB_1
+    _, scb_b = SCB_1
     with pytest.raises(errors.WriteOperationsForbidden) as exc_info:
         scb_b.push(10)
     assert exc_info.type is errors.WriteOperationsForbidden
 
 
 def test_popitem_raises_when_read_not_permitted(SCB_1):
-    scb_a, scb_b = SCB_1
+    scb_a, _ = SCB_1
     with pytest.raises(errors.ReadOperationsForbidden) as exc_info:
         scb_a.popitem()
     assert exc_info.type is errors.ReadOperationsForbidden
 
 
 def test_popmany_raises_when_read_not_permitted(SCB_1):
-    scb_a, scb_b = SCB_1
+    scb_a, _ = SCB_1
     with pytest.raises(errors.ReadOperationsForbidden) as exc_info:
         scb_a.popmany(2)
     assert exc_info.type is errors.ReadOperationsForbidden
@@ -102,3 +102,37 @@ def test_error_raised_when_buffer_attempted_to_be_created_but_already_exists(SCB
     with pytest.raises(errors.BufferAlreadyCreated) as exc_info:
         _scb = buffer.SharedCircularBuffer("test_buffer_1", create=True)
     assert exc_info.type is errors.BufferAlreadyCreated
+
+
+def test_SharedCircularBuffer_str_operator(SCB_1):
+    scb_a, scb_b = SCB_1
+    assert str(scb_a) == f"SharedCircularBuffer ({scb_a.name})"
+    assert str(scb_b) == f"SharedCircularBuffer ({scb_a.name}) (0.00% full)"
+
+
+def test_usage_returns_0_when_empty(SCB_1):
+    _, scb_b = SCB_1
+    assert scb_b.usage == 0
+
+
+def test_usage_returns_1_when_item_present(SCB_1):
+    scb_a, scb_b = SCB_1
+    scb_a.push(10)
+    assert scb_b.usage == 1
+
+
+def test_raises_ValueError_when_length_less_than_2():
+    with pytest.raises(ValueError) as exc_info:
+        _scb = buffer.SharedCircularBuffer("test_buffer_1", length=1)
+    assert exc_info.type is ValueError
+
+
+def test_usage_returns_correct_number_when_write_pointer_behind_read_pointer(SCB_3):
+    scb_a, scb_b = SCB_3
+    for _ in range(127):
+        scb_a.push(10)
+    for _ in range(10):
+        scb_b.popitem()
+    for _ in range(5):
+        scb_a.push(10)
+    assert scb_b.usage == 122
