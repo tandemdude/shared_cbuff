@@ -104,7 +104,11 @@ class SharedCircularBuffer:
             :obj:`int`: Number of items in the buffer
         """
         if self._read_pointer > self._stored_write_pointer:
-            return self.length - (self._read_pointer // self.item_size) + (self._stored_write_pointer // self.item_size)
+            return (
+                self.length
+                - (self._read_pointer // self.item_size)
+                + (self._stored_write_pointer // self.item_size)
+            )
         return (self._stored_write_pointer - self._read_pointer) // self.item_size
 
     def push(self, item: int) -> None:

@@ -1,5 +1,4 @@
-from shared_cbuff import buffer
-from shared_cbuff import errors
+from shared_cbuff import buffer, errors
 from shared_cbuff.buffer import *
 from shared_cbuff.errors import *
 
