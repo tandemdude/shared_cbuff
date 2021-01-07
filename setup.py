@@ -5,7 +5,7 @@ import types
 from setuptools import setup, find_namespace_packages
 
 
-name = "simple_cbuff"
+name = "shared_cbuff"
 
 
 def parse_meta():
@@ -32,7 +32,7 @@ meta = parse_meta()
 
 
 setup(
-    name="simple_cbuff",
+    name="shared_cbuff",
     version=meta.version,
     description="A simple shared circular buffer implementation",
     long_description=long_description(),
