@@ -1,10 +1,15 @@
 import atexit
 import typing
+from math import log
 from multiprocessing import shared_memory
 
 from shared_cbuff import errors
 
 __all__: typing.List[str] = ["SharedCircularBuffer"]
+
+
+def _bytes_needed(n: int) -> int:
+    return 1 if n == 0 else int(log(n, 256)) + 1
 
 
 class SharedCircularBuffer:
@@ -38,7 +43,8 @@ class SharedCircularBuffer:
         self.name = name
         self.item_size = item_size
         self.length = length
-        self._internal_length = (item_size * length) + 1
+        self._write_pointer_byte_length = _bytes_needed(item_size * length)
+        self._internal_length = (item_size * length) + self._write_pointer_byte_length
         self.writeable = create
 
         if create:
@@ -48,22 +54,39 @@ class SharedCircularBuffer:
         else:
             self._memory = shared_memory.SharedMemory(name=name, create=False)
 
-        self._write_pointer = self._memory.buf[self._internal_length - 1] = 0
+        self._internal_write_pointer = 0
         self._read_pointer = 0
 
         atexit.register(self.cleanup)
 
-    def _next_write_pointer(self) -> None:
-        self._write_pointer += 1
-        self._write_pointer %= self.length
+    @property
+    def _stored_write_pointer(self) -> int:
+        return int.from_bytes(
+            self._memory.buf[
+                self._internal_length
+                - self._write_pointer_byte_length : self._internal_length
+            ],
+            byteorder="big",
+        )
 
-        self._memory.buf[self._internal_length - 1] = self._write_pointer
+    @_stored_write_pointer.setter
+    def _stored_write_pointer(self, n: int) -> None:
+        self._memory.buf[
+            self._internal_length
+            - self._write_pointer_byte_length : self._internal_length
+        ] = n.to_bytes(self._write_pointer_byte_length, byteorder="big")
+
+    def _next_write_pointer(self) -> None:
+        self._internal_write_pointer += self.item_size
+        self._internal_write_pointer %= self.length * self.item_size
+
+        self._stored_write_pointer = self._internal_write_pointer
 
     def _next_read_pointer(self) -> typing.Optional[int]:
-        if self._read_pointer == self._memory.buf[self._internal_length - 1]:
+        if self._read_pointer == self._stored_write_pointer:
             return None
-        self._read_pointer += 1
-        self._read_pointer %= self.length
+        self._read_pointer += self.item_size
+        self._read_pointer %= self.length * self.item_size
         return self._read_pointer
 
     def push(self, item: int) -> None:
@@ -83,7 +106,10 @@ class SharedCircularBuffer:
             raise errors.WriteOperationsForbidden("Buffer is not writeable")
 
         self._next_write_pointer()
-        self._memory.buf[self._write_pointer] = item
+        temp_w_pointer = self._internal_write_pointer or (self.item_size * self.length)
+        self._memory.buf[
+            temp_w_pointer - self.item_size : temp_w_pointer
+        ] = item.to_bytes(self.item_size, byteorder="big")
 
     def popitem(self) -> typing.Optional[int]:
         """
@@ -99,7 +125,11 @@ class SharedCircularBuffer:
             raise errors.ReadOperationsForbidden("Buffer is not readable")
 
         if (read_addr := self._next_read_pointer()) is not None:
-            return self._memory.buf[read_addr]
+            temp_r_pointer = read_addr or (self.item_size * self.length)
+            return int.from_bytes(
+                self._memory.buf[temp_r_pointer - self.item_size : temp_r_pointer],
+                byteorder="big",
+            )
         return None
 
     def popmany(self, n: int) -> typing.Sequence[int]:
@@ -117,8 +147,8 @@ class SharedCircularBuffer:
 
         items = []
         for _ in range(n):
-            if (read_addr := self._next_read_pointer()) is not None:
-                items.append(self._memory.buf[read_addr])
+            if (item := self.popitem()) is not None:
+                items.append(item)
             else:
                 break
         return items

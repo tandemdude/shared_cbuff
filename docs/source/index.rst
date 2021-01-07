@@ -50,8 +50,7 @@ Using the buffer is fairly straightforward
     >>> scb_b.popmany(3)
     [10, 20, 30]
 
-Currently, only storage of single-byte integers is supported and the buffer has a max length of 256. This is intended
-to be changed in the near future.
+Note that currently, only integer values can be written to and read from the buffer.
 
 **Index:**
 
