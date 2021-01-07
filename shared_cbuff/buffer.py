@@ -41,11 +41,14 @@ class SharedCircularBuffer:
             raise ValueError("Buffer length must greater than 1")
 
         self.name = name
+        """The name of the shared memory block this instance is attached to."""
         self.item_size = item_size
+        """The maximum size of each item stored in bytes."""
         self.length = length
+        """The length of the buffer."""
         self._write_pointer_byte_length = _bytes_needed(item_size * length)
         self._internal_length = (item_size * length) + self._write_pointer_byte_length
-        self.writeable = create
+        self._writeable = create
 
         if create:
             self._memory = shared_memory.SharedMemory(
@@ -60,7 +63,7 @@ class SharedCircularBuffer:
         atexit.register(self.cleanup)
 
     def __str__(self) -> str:
-        if self.writeable:
+        if self._writeable:
             return f"SharedCircularBuffer ({self.name})"
         return f"SharedCircularBuffer ({self.name}) ({(self.usage / self.length) * 100:.2f}% full)"
 
@@ -124,7 +127,7 @@ class SharedCircularBuffer:
         Raises:
             :obj:`~.errors.WriteOperationsForbidden`: The buffer cannot be written to by this instance.
         """
-        if not self.writeable:
+        if not self._writeable:
             raise errors.WriteOperationsForbidden("Buffer is not writeable")
 
         self._next_write_pointer()
@@ -143,7 +146,7 @@ class SharedCircularBuffer:
         Raises:
             :obj:`~.errors.ReadOperationsForbidden`: The buffer cannot be read from by this instance.
         """
-        if self.writeable:
+        if self._writeable:
             raise errors.ReadOperationsForbidden("Buffer is not readable")
 
         if (read_addr := self._next_read_pointer()) is not None:
@@ -164,7 +167,7 @@ class SharedCircularBuffer:
         Raises:
             :obj:`~.errors.ReadOperationsForbidden`: The buffer cannot be read from by this instance.
         """
-        if self.writeable:
+        if self._writeable:
             raise errors.ReadOperationsForbidden("Buffer is not readable")
 
         items = []
@@ -186,5 +189,5 @@ class SharedCircularBuffer:
             ``None``
         """
         self._memory.close()
-        if self.writeable:
+        if self._writeable:
             self._memory.unlink()
