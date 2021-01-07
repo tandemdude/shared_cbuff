@@ -14,12 +14,12 @@ Shared Circular Buffer is an implementation of a simple circular buffer which ma
 :obj:`multiprocessing.shared_memory.SharedMemory` in order to allow sharing of the data across multiple
 python instances.
 
-Repository: `View on GitHub <https://github.com/tandemdude/Shared-Circular-Buffer>`_
+Repository: `View on GitHub <https://github.com/tandemdude/shared_cbuff>`_
 
-Docs: `View on readthedocs <https://shared-circular-buffer.readthedocs.io/en/latest/>`_
+Docs: `View on readthedocs <https://shared-cbuff.readthedocs.io/en/latest/>`_
 
 If you think you have found a bug or other problem with the library, or you would like to suggest a feature,
-you should submit an issue on the GitHub repository `here <https://github.com/tandemdude/Shared-Circular-Buffer/issues>`_.
+you should submit an issue on the GitHub repository `here <https://github.com/tandemdude/shared_cbuff/issues>`_.
 Before doing so you should make sure you are on the latest version of the library and check to see if an issue
 already exists for your bug or feature.
 
