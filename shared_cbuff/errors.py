@@ -1,3 +1,8 @@
+import typing
+
+__all__: typing.List[str] = ["CBuffException", "WriteOperationsForbidden", "ReadOperationsForbidden"]
+
+
 class CBuffException(Exception):
     """Base exception for all exceptions raised by the library."""
 

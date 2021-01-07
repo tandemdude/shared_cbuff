@@ -36,7 +36,7 @@ class SharedCircularBuffer:
 
     def __init__(
         self, name: str, *, create: bool = False, item_size: int = 1, length: int = 2
-    ):
+    ) -> None:
         if length < 2:
             raise ValueError("Buffer length must greater than 1")
 
@@ -58,6 +58,11 @@ class SharedCircularBuffer:
         self._read_pointer = 0
 
         atexit.register(self.cleanup)
+
+    def __str__(self) -> str:
+        if self.writeable:
+            return f"SharedCircularBuffer ({self.name})"
+        return f"SharedCircularBuffer ({self.name}) ({(self.usage / self.length) * 100:.2f}% full)"
 
     @property
     def _stored_write_pointer(self) -> int:
@@ -88,6 +93,19 @@ class SharedCircularBuffer:
         self._read_pointer += self.item_size
         self._read_pointer %= self.length * self.item_size
         return self._read_pointer
+
+    @property
+    def usage(self) -> int:
+        """
+        The number of elements currently in the buffer. This can be used to figure out how
+        full or empty the buffer is at any time.
+
+        Returns:
+            :obj:`int`: Number of items in the buffer
+        """
+        if self._read_pointer > self._stored_write_pointer:
+            return self.length - (self._read_pointer // self.item_size) + (self._stored_write_pointer // self.item_size)
+        return (self._stored_write_pointer - self._read_pointer) // self.item_size
 
     def push(self, item: int) -> None:
         """
