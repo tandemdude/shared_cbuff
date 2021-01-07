@@ -24,6 +24,15 @@ Before doing so you should make sure you are on the latest version of the librar
 already exists for your bug or feature.
 
 
+Installation
+============
+
+Use the package manager `pip <https://pip.pypa.io/en/stable/>`_ to install the library.
+::
+
+    pip install git+https://github.com/tandemdude/shared_cbuff.git
+
+
 Simple Usage
 ============
 
