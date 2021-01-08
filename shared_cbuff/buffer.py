@@ -208,8 +208,7 @@ class SharedCircularBuffer:
         Closes the connection to the :obj:`~multiprocessing.shared_memory.SharedMemory` block and
         unlinks it if this class was the writer to the buffer.
 
-        This method is automatically called as long as your program exits cleanly - i.e. not
-        through :obj:`KeyboardInterrupt`.
+        This method is automatically called before the program exits.
 
         Returns:
             ``None``
